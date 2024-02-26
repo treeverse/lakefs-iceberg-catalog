@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 import java.util.regex.Matcher;
@@ -104,7 +105,7 @@ public class LakeFSTableOperations extends HadoopTableOperations {
             this.shouldRefresh = false;
             return currentMetadata;
         } catch (IOException e) {
-            throw new RuntimeIOException(e, "Failed to refresh the table");
+            throw new UncheckedIOException("Failed to refresh the table", e);
         }
     }
 

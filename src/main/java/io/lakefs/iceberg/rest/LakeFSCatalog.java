@@ -157,9 +157,9 @@ public class LakeFSCatalog extends BaseMetastoreCatalog implements SupportsNames
                 }
             }
         } catch (IOException ioe) {
-            throw new RuntimeIOException(ioe, "Failed to list tables under: %s", namespace);
+            throw new UncheckedIOException(String.format("Failed to list tables under: %s", namespace), ioe);
         } catch (URISyntaxException e) {
-            LOG.error(String.format("Failed to parse URI"));
+            LOG.error(String.format("Failed to parse URI: %s", location));
             throw new RuntimeException(e);
         }
 
@@ -231,7 +231,7 @@ public class LakeFSCatalog extends BaseMetastoreCatalog implements SupportsNames
                 return fs.delete(tablePath, true /* recursive */);
             }
         } catch (IOException e) {
-            throw new RuntimeIOException(e, "Failed to delete file: %s", tablePath);
+            throw new UncheckedIOException(String.format("Failed to delete file: %s", tablePath), e);
         }
     }
 
@@ -270,7 +270,7 @@ public class LakeFSCatalog extends BaseMetastoreCatalog implements SupportsNames
             stream.close();
 
         } catch (IOException e) {
-            throw new RuntimeIOException(e, "Create namespace failed: %s", namespace);
+            throw new UncheckedIOException(String.format("Create namespace failed: %s", namespace), e);
         }
     }
 
@@ -310,7 +310,7 @@ public class LakeFSCatalog extends BaseMetastoreCatalog implements SupportsNames
             }
             return namespaces;
         } catch (IOException ioe) {
-            throw new RuntimeIOException(ioe, "Failed to list namespace under: %s", namespace);
+            throw new UncheckedIOException(String.format("Failed to list namespace under: %s", namespace), ioe);
         }
     }
 
@@ -341,7 +341,7 @@ public class LakeFSCatalog extends BaseMetastoreCatalog implements SupportsNames
             }
             return fs.delete(nsPath, true /* recursive */);
         } catch (IOException e) {
-            throw new RuntimeIOException(e, "Namespace delete failed: %s", namespace);
+            throw new UncheckedIOException(String.format("Namespace delete failed: %s", namespace), e);
         }
     }
 
