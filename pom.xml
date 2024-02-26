@@ -35,12 +35,12 @@
         <dependency>
             <groupId>io.lakefs</groupId>
             <artifactId>hadoop-lakefs</artifactId>
-            <version>0.2.3-RC.0</version> <!-- Modify after releasing new lakeFSFS version -->
+            <version>0.2.3</version> <!-- Modify after releasing new lakeFSFS version -->
         </dependency>
         <dependency>
             <groupId>io.lakefs</groupId>
             <artifactId>hadoop-lakefs</artifactId>
-            <version>0.2.3-RC.0</version> <!-- Modify after releasing new lakeFSFS version -->
+            <version>0.2.3</version> <!-- Modify after releasing new lakeFSFS version -->
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
@@ -55,6 +55,11 @@
             <artifactId>jackson-module-scala_3</artifactId>
             <version>2.16.1</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.avro</groupId>
+            <artifactId>avro</artifactId>
+            <version>1.11.3</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/org.apache.iceberg/iceberg-core -->
         <dependency>
