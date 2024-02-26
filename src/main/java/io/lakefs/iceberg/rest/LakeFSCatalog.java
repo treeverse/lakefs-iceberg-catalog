@@ -75,6 +75,7 @@ public class LakeFSCatalog extends BaseMetastoreCatalog implements SupportsNames
         catalogName = name;
         warehouseLocation = WAREHOUSE_LOCATION;
         suppressPermissionError = Boolean.parseBoolean(properties.get(HADOOP_SUPPRESS_PERMISSION_ERROR));
+        // TODO (niro): Future - create a caching mechanism for FileSystem Initialization per repo
     }
 
     @Override

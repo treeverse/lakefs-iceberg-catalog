@@ -5,6 +5,10 @@ import org.apache.iceberg.io.InputFile;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockserver.matchers.Times;
+import static org.mockserver.model.HttpResponse.response;
+
+import io.lakefs.clients.sdk.model.StorageConfig;
 
 public class TestLakeFSFileIO extends FSTestBase {
 
@@ -15,6 +19,21 @@ public class TestLakeFSFileIO extends FSTestBase {
 
     @Before
     public void setUp(){
+        // lakeFSFS initialization requires a blockstore.
+        mockServerClient.when(request()
+                                .withMethod("GET")
+                                .withPath("/config/storage"), 
+                        Times.unlimited())
+                .respond(response()
+                        .withStatusCode(200)
+                        .withBody(gson.toJson(new StorageConfig()
+                                .blockstoreType("s3")
+                                .blockstoreNamespaceExample("/not/really")
+                                .blockstoreNamespaceValidityRegex(".*")
+                                .preSignSupport(false)
+                                .preSignSupportUi(false)
+                                .importSupport(false)
+                                .importValidityRegex(".*"))));
         lakeFSFileIO = new LakeFSFileIO(lakeFSRepo, lakeFSRef, conf);
     }
 
