@@ -5,10 +5,10 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>io.lakefs</groupId>
-    <artifactId>lakefs-iceberg-rest</artifactId>
+    <artifactId>lakefs-iceberg-catalog</artifactId>
     <version>0.1.0-SNAPSHOT</version>
 
-    <name>lakefs-iceberg-rest</name>
+    <name>lakefs-iceberg-catalog</name>
     <url>https://lakefs.io</url>
     <description>An Iceberg REST catalog implementation for lakeFS</description>
     <properties>
@@ -19,9 +19,9 @@
         <hadoop.version>3.3.5</hadoop.version>
     </properties>
     <scm>
-        <connection>scm:git:git@github.com:treeverse/lakefs-iceberg-rest.git</connection>
-        <developerConnection>scm:git:git@github.com:treeverse/lakefs-iceberg-rest.git</developerConnection>
-        <url>https://github.com/treeverse/lakefs-iceberg-rest</url>
+        <connection>scm:git:git@github.com:treeverse/lakefs-iceberg-catalog.git</connection>
+        <developerConnection>scm:git:git@github.com:treeverse/lakefs-iceberg-catalog.git</developerConnection>
+        <url>https://github.com/treeverse/lakefs-iceberg-catalog</url>
     </scm>
     <developers>
         <developer>

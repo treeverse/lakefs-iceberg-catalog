@@ -58,7 +58,7 @@ def spark():
     secret_key = os.getenv("AWS_SECRET_ACCESS_KEY", "")
     spark_config = SparkConf()
     spark_config.set("spark.sql.catalog.lakefs", "org.apache.iceberg.spark.SparkCatalog")
-    spark_config.set("spark.sql.catalog.lakefs.catalog-impl", "io.lakefs.iceberg.rest.LakeFSCatalog")
+    spark_config.set("spark.sql.catalog.lakefs.catalog-impl", "io.lakefs.iceberg.catalog.LakeFSCatalog")
     spark_config.set("spark.sql.catalog.lakefs.warehouse", f"lakefs://")
     spark_config.set("spark.sql.catalog.lakefs.cache-enabled", "false")
     spark_config.set("spark.sql.extensions", "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions")
@@ -69,7 +69,7 @@ def spark():
     spark_config.set("spark.hadoop.fs.lakefs.secret.key", "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY")
     spark_config.set("spark.hadoop.fs.lakefs.endpoint", "http://localhost:8000/api/v1")
     spark_config.set("spark.jars.packages",
-                     "io.lakefs:lakefs-iceberg-rest:0.1.0-SNAPSHOT,"
+                     "io.lakefs:lakefs-iceberg-catalog:0.1.0-SNAPSHOT,"
                      "org.apache.iceberg:iceberg-spark-runtime-3.3_2.12:1.4.3,"
                      "org.apache.hadoop:hadoop-aws:3.3.4"
                      )

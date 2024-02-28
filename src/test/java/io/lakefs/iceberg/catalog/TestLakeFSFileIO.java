@@ -1,4 +1,4 @@
-package io.lakefs.iceberg.rest;
+package io.lakefs.iceberg.catalog;
 
 import io.lakefs.FSTestBase;
 import org.apache.iceberg.io.InputFile;

@@ -1,4 +1,4 @@
-package io.lakefs.iceberg.rest;
+package io.lakefs.iceberg.catalog;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -28,7 +28,6 @@ import org.apache.iceberg.exceptions.AlreadyExistsException;
 import org.apache.iceberg.exceptions.NamespaceNotEmptyException;
 import org.apache.iceberg.exceptions.NoSuchNamespaceException;
 import org.apache.iceberg.exceptions.NoSuchTableException;
-import org.apache.iceberg.exceptions.RuntimeIOException;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;

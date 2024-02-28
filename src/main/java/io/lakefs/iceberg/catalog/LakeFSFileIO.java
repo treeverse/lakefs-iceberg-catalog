@@ -1,4 +1,4 @@
-package io.lakefs.iceberg.rest;
+package io.lakefs.iceberg.catalog;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.iceberg.hadoop.HadoopFileIO;

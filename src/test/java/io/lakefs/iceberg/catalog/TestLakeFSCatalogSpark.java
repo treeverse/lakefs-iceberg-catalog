@@ -1,4 +1,4 @@
-package io.lakefs.iceberg.rest;
+package io.lakefs.iceberg.catalog;
 
 import io.lakefs.clients.sdk.ApiException;
 import io.lakefs.clients.sdk.model.RepositoryCreation;
@@ -40,7 +40,7 @@ public class TestLakeFSCatalogSpark {
         
         SparkConf conf = new SparkConf();
         conf.set("spark.sql.catalog.lakefs", "org.apache.iceberg.spark.SparkCatalog");
-        conf.set("spark.sql.catalog.lakefs.catalog-impl", "io.lakefs.iceberg.rest.LakeFSCatalog");
+        conf.set("spark.sql.catalog.lakefs.catalog-impl", "io.lakefs.iceberg.catalog.LakeFSCatalog");
         conf.set("spark.sql.catalog.lakefs.warehouse", "lakefs://example-repo");
         conf.set("spark.sql.extensions", "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions");
 

@@ -1,4 +1,4 @@
-package io.lakefs.iceberg.rest;
+package io.lakefs.iceberg.catalog;
 
 import io.lakefs.LakeFSClient;
 import io.lakefs.clients.sdk.ApiException;
