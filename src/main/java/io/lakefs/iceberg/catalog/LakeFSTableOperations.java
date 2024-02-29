@@ -39,10 +39,13 @@ public class LakeFSTableOperations extends HadoopTableOperations {
     private static final Pattern VERSION_PATTERN = Pattern.compile("v([^.]*)\\..*");
     private final Path location;
     private final LakeFSFileSystem fs;
-    FileIO fileIO;
+    private final FileIO fileIO;
 
+    // Ensure reading currentMetadata will provide the last value written
     private volatile TableMetadata currentMetadata = null;
+    // Will ensure the version read is the most up to date write
     private volatile Integer version = null;
+    // volatile parameter to ensure that if it was set to true, it will be read appropriately  
     private volatile boolean shouldRefresh = true;
 
     public LakeFSTableOperations(Path location, FileIO fileIO, Configuration conf) {
@@ -212,7 +215,7 @@ public class LakeFSTableOperations extends HadoopTableOperations {
         Path versionHintFile = versionHintFile();
 
         try {
-            Path tempVersionHintFile = metadataPath(UUID.randomUUID().toString() + "-version-hint.temp");
+            Path tempVersionHintFile = metadataPath(UUID.randomUUID() + "-version-hint.temp");
             writeVersionToPath(fs, tempVersionHintFile, versionToWrite);
             fs.delete(versionHintFile, false /* recursive delete */);
             fs.rename(tempVersionHintFile, versionHintFile);
@@ -227,14 +230,13 @@ public class LakeFSTableOperations extends HadoopTableOperations {
         }
     }
     
-    int findVersion() {
+    private int findVersion() {
         Path versionHintFile = versionHintFile();
 
         try (InputStreamReader fsr =
                      new InputStreamReader(fs.open(versionHintFile), StandardCharsets.UTF_8);
              BufferedReader in = new BufferedReader(fsr)) {
             return Integer.parseInt(in.readLine().replace("\n", ""));
-
         } catch (Exception e) {
             try {
                 if (fs.exists(metadataRoot())) {

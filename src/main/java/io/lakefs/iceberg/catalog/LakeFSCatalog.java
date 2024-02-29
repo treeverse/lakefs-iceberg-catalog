@@ -37,14 +37,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Most of the code taken for HadoopCatalog with some modifications in regard to the FileSystem and path operations.
  * LakeFSCatalog provides a way to use table names like repo_name.branch_name.table to work with path-based tables
- * under a common location. It uses a specified directory under the lakeFS FileSystem as the warehouse directory, 
- * and organizes multiple levels directories that mapped to the database,
- * namespace and the table respectively.
+ * under a common location.
  */
 public class LakeFSCatalog extends BaseMetastoreCatalog implements SupportsNamespaces, Configurable {
-
+    // Most of the code taken for HadoopCatalog with some modifications in regard to the FileSystem and path operations.
+    // It uses a specified directory under the lakeFS FileSystem as the warehouse directory, 
+    // and organizes multiple levels directories that mapped to the database, namespace and the table respectively.
+    
     private static final Logger LOG = LoggerFactory.getLogger(LakeFSCatalog.class);
     
     private static final String TABLE_METADATA_FILE_EXTENSION = ".metadata.json";
@@ -61,15 +61,14 @@ public class LakeFSCatalog extends BaseMetastoreCatalog implements SupportsNames
     private boolean suppressPermissionError = false;
     private Map<String, String> catalogProperties;
 
-    public LakeFSCatalog() {}
-
     @Override
     public void initialize(String name, Map<String, String> properties) {
         catalogProperties = ImmutableMap.copyOf(properties);
         String inputWarehouseLocation = properties.get(CatalogProperties.WAREHOUSE_LOCATION);
         Preconditions.checkArgument(
                 inputWarehouseLocation != null && !inputWarehouseLocation.isEmpty(),
-                "Cannot initialize LakeFSCatalog because warehousePath must not be null or empty");
+                String.format("Missing catalog property %s. Cannot initialize LakeFSCatalog because " +
+                        "warehousePath must not be null or empty", CatalogProperties.WAREHOUSE_LOCATION));
 
         catalogName = name;
         warehouseLocation = WAREHOUSE_LOCATION;
@@ -84,9 +83,9 @@ public class LakeFSCatalog extends BaseMetastoreCatalog implements SupportsNames
 
     private boolean shouldSuppressPermissionError(IOException ioException) {
         if (suppressPermissionError) {
-            return ioException instanceof AccessDeniedException
-                    || (ioException.getMessage() != null
-                    && ioException.getMessage().contains("AuthorizationPermissionMismatch"));
+            return ioException instanceof AccessDeniedException || 
+                    ioException.getMessage() != null && 
+                            ioException.getMessage().contains("AuthorizationPermissionMismatch");
         }
         return false;
     }
@@ -97,16 +96,15 @@ public class LakeFSCatalog extends BaseMetastoreCatalog implements SupportsNames
         // still a namespace.
         try (LakeFSFileSystem fs = new LakeFSFileSystem()) {
             fs.initialize(path.toUri(), this.conf);
-            return fs.listStatus(metadataPath, TABLE_FILTER).length >= 1;
+            return fs.listStatus(metadataPath, TABLE_FILTER).length >= 1; // TODO (niro): use fs.listStatusIterator instead
         } catch (FileNotFoundException e) {
             return false;
         } catch (IOException e) {
             if (shouldSuppressPermissionError(e)) {
                 LOG.warn("Unable to list metadata directory {}", metadataPath, e);
                 return false;
-            } else {
-                throw new UncheckedIOException(e);
             }
+            throw new UncheckedIOException(e);
         }
     }
 
@@ -183,22 +181,11 @@ public class LakeFSCatalog extends BaseMetastoreCatalog implements SupportsNames
     @Override
     protected String defaultWarehouseLocation(TableIdentifier tableIdentifier) {
         String tableName = tableIdentifier.name();
-        StringBuilder sb = new StringBuilder();
-        String[] levels = tableIdentifier.namespace().levels();
-        for (String level : levels) {
-            sb.append(level).append('/');
-        }
-        sb.append(tableName);
-        return sb.toString();
+        return defaultWarehouseLocation(tableIdentifier.namespace()) + tableName;
     }
 
     protected String defaultWarehouseLocation(Namespace ns) {
-        StringBuilder sb = new StringBuilder();
-        String[] levels = ns.levels();
-        for (String level : levels) {
-            sb.append(level).append('/');
-        }
-        return sb.toString();
+        return String.join("/", ns.levels()) + "/";
     }
 
     @Override
@@ -216,19 +203,18 @@ public class LakeFSCatalog extends BaseMetastoreCatalog implements SupportsNames
         }
         TableOperations ops = newTableOps(identifier);
         TableMetadata lastMetadata = ops.current();
+        if (lastMetadata == null) {
+            LOG.debug("Not an iceberg table: {}", identifier);
+            return false;
+        }
         try (LakeFSFileSystem fs = new LakeFSFileSystem()) {
             fs.initialize(tablePath.toUri(), this.conf);
-            if (lastMetadata == null) {
-                LOG.debug("Not an iceberg table: {}", identifier);
-                return false;
-            } else {
-                if (purge) {
+            if (purge) {
                     // Since the data files and the metadata files may store in different locations,
                     // so it has to call dropTableData to force delete the data file.
                     CatalogUtil.dropTableData(ops.io(), lastMetadata);
-                }
-                return fs.delete(tablePath, true /* recursive */);
             }
+            return fs.delete(tablePath, true /* recursive */);
         } catch (IOException e) {
             throw new UncheckedIOException(String.format("Failed to delete file: %s", tablePath), e);
         }
@@ -236,20 +222,15 @@ public class LakeFSCatalog extends BaseMetastoreCatalog implements SupportsNames
 
     @Override
     public void renameTable(TableIdentifier from, TableIdentifier to) {
-        throw new UnsupportedOperationException("Cannot rename Hadoop tables");
+        throw new UnsupportedOperationException("Cannot rename lakeFS Iceberg tables");
     }
 
     @Override
     public void createNamespace(Namespace namespace, Map<String, String> meta) {
         Preconditions.checkArgument(
                 !namespace.isEmpty(), "Cannot create namespace with invalid name: %s", namespace);
-        // TODO (niro): We can easily support namespace creation with metadata by defining a namespace metadata file 
-        //  convention name and writing it to the namespace path
-        if (!meta.isEmpty()) {
-            LOG.warn("create namespace with metadata is currently no supported. Ignoring metadata");
-        }
-
-        String location = String.format("%s%s/%s", WAREHOUSE_LOCATION, defaultWarehouseLocation(namespace), NAMESPACE_FILENAME);
+        String location = String.format("%s%s", WAREHOUSE_LOCATION, defaultWarehouseLocation(namespace));
+        Path metadataPath = new Path(location + "/" + NAMESPACE_FILENAME);
         Path nsPath;
         try {
             nsPath = new Path(new URI(location));
@@ -263,11 +244,10 @@ public class LakeFSCatalog extends BaseMetastoreCatalog implements SupportsNames
 
         try (LakeFSFileSystem fs = new LakeFSFileSystem()) {
             fs.initialize(nsPath.toUri(), this.conf);
-            FSDataOutputStream stream = fs.create(nsPath, false);
+            FSDataOutputStream stream = fs.create(metadataPath, false);
             ObjectMapper mapper = new ObjectMapper();
             stream.write(mapper.writeValueAsBytes(meta));
             stream.close();
-
         } catch (IOException e) {
             throw new UncheckedIOException(String.format("Create namespace failed: %s", namespace), e);
         }
@@ -275,7 +255,7 @@ public class LakeFSCatalog extends BaseMetastoreCatalog implements SupportsNames
 
     @Override
     public List<Namespace> listNamespaces() {
-        throw new UnsupportedOperationException("Current lakeFS Catalog implementation does not support top-level listing");
+        throw new UnsupportedOperationException("Top-level listing not supported");
     }
     
     @Override
@@ -339,7 +319,7 @@ public class LakeFSCatalog extends BaseMetastoreCatalog implements SupportsNames
                 }
             }
             return fs.delete(nsPath, true /* recursive */);
-        } catch (IOException e) {
+        } catch (IOException e) { 
             throw new UncheckedIOException(String.format("Namespace delete failed: %s", namespace), e);
         }
     }
