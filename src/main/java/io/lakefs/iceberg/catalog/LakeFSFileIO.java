@@ -1,6 +1,7 @@
 package io.lakefs.iceberg.catalog;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 import org.apache.iceberg.hadoop.HadoopFileIO;
 import org.apache.iceberg.hadoop.HadoopInputFile;
 import org.apache.iceberg.hadoop.HadoopOutputFile;
@@ -15,8 +16,7 @@ import org.apache.iceberg.io.OutputFile;
 public class LakeFSFileIO extends HadoopFileIO {
 
     private transient Configuration conf; // transient - to avoid Spark serialization error
-    private String lakeFSRepo;
-    private String lakeFSRef;
+    private String basePath;
     
     @SuppressWarnings("unused")
     public LakeFSFileIO() {
@@ -25,19 +25,17 @@ public class LakeFSFileIO extends HadoopFileIO {
     public LakeFSFileIO(String lakeFSRepo, String lakeFSRef, Configuration conf) {
         super(conf);
         this.conf = conf;
-        this.lakeFSRepo = lakeFSRepo;
-        this.lakeFSRef = lakeFSRef;
+        this.basePath = String.format("%s%s/%s", LakeFSCatalog.WAREHOUSE_LOCATION, lakeFSRepo, lakeFSRef);
+        
     }
 
     private String verifyPath(String path) throws IllegalArgumentException {
-        if (!path.matches("^[0-9a-z]*://.*")) {
-            path = String.format("%s%s/%s/%s", LakeFSCatalog.WAREHOUSE_LOCATION, lakeFSRepo, lakeFSRef, path);
-        }
-        if (!path.startsWith(String.format("%s%s/%s/", LakeFSCatalog.WAREHOUSE_LOCATION, lakeFSRepo, lakeFSRef))) {
+        Path p = new Path(basePath, path);
+        if (!p.toString().startsWith(basePath)) {
             // Allow creating Files only under FileIO repository and ref
             throw new IllegalArgumentException("Wrong repository and reference provided");
         }
-        return path;
+        return p.toString();
     }
     
     @Override
@@ -56,5 +54,23 @@ public class LakeFSFileIO extends HadoopFileIO {
     public OutputFile newOutputFile(String path) {
         path = verifyPath(path);
         return HadoopOutputFile.fromPath(new LakeFSPath(path), conf);
+    }
+
+    private static class LakeFSPath extends Path {
+        public LakeFSPath(String pathString) throws IllegalArgumentException {
+            super(pathString);
+            if (!pathString.startsWith("lakefs://")) {
+                throw new IllegalArgumentException("Expecting a valid lakefs URI");
+            }
+        }
+
+        /**
+         * Return the path relative to the lakeFS repository and branch.
+         * For example, given <code>lakefs://example-repo/main/a/b/c</code>, return <code>a/b/c</code>.
+         */
+        @Override
+        public String toString() {
+            return Util.getPathFromURL(super.toString());
+        }
     }
 }

@@ -2,7 +2,7 @@ package io.lakefs.iceberg.catalog;
 
 import org.apache.commons.lang3.StringUtils;
 
-public class Util {
+class Util {
 
     private Util() {}
 

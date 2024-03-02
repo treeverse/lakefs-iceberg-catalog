@@ -70,7 +70,7 @@ public class LakeFSTableOperations extends HadoopTableOperations {
     public String metadataFileLocation(String fileName) {
         String path = super.metadataFileLocation(fileName);
         if (path.startsWith(LakeFSCatalog.WAREHOUSE_LOCATION)) {
-            path = Util.GetPathFromURL(path);
+            path = Util.getPathFromURL(path);
         }
         return path;
     }
@@ -172,9 +172,9 @@ public class LakeFSTableOperations extends HadoopTableOperations {
     private synchronized void updateVersionAndMetadata(int newVersion, String metadataFile) {
         // update if the current version is out of date
         if (version == null || version != newVersion) {
-            this.version = newVersion;
             this.currentMetadata =
                     checkUUID(currentMetadata, TableMetadataParser.read(io(), metadataFile));
+            this.version = newVersion;
         }
     }
 

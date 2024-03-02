@@ -11,7 +11,6 @@ import java.util.*;
 
 import com.amazonaws.thirdparty.jackson.databind.ObjectMapper;
 import io.lakefs.LakeFSFileStatus;
-import io.lakefs.LakeFSFileSystem;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.*;
@@ -94,8 +93,8 @@ public class LakeFSCatalog extends BaseMetastoreCatalog implements SupportsNames
         Path metadataPath = new Path(path, "metadata");
         // Only the path which contains metadata is the path for table, otherwise it could be
         // still a namespace.
-        try (LakeFSFileSystem fs = new LakeFSFileSystem()) {
-            fs.initialize(path.toUri(), this.conf);
+        try {
+            FileSystem fs = path.getFileSystem(conf);
             return fs.listStatus(metadataPath, TABLE_FILTER).length >= 1; // TODO (niro): use fs.listStatusIterator instead
         } catch (FileNotFoundException e) {
             return false;
@@ -109,8 +108,8 @@ public class LakeFSCatalog extends BaseMetastoreCatalog implements SupportsNames
     }
 
     private boolean isDirectory(Path path) {
-        try (LakeFSFileSystem fs = new LakeFSFileSystem()) {
-            fs.initialize(path.toUri(), this.conf);
+        try {
+            FileSystem fs = path.getFileSystem(conf);
             return fs.getFileStatus(path).isDirectory();
         } catch (FileNotFoundException e) {
             return false;
@@ -134,8 +133,7 @@ public class LakeFSCatalog extends BaseMetastoreCatalog implements SupportsNames
         Set<TableIdentifier> tblIdents = Sets.newHashSet();
         try {
             Path nsPath = new Path(new URI(location));
-            LakeFSFileSystem fs = new LakeFSFileSystem();
-            fs.initialize(nsPath.toUri(), this.conf);
+            FileSystem fs = nsPath.getFileSystem(conf);
             if (!isDirectory(nsPath)) {
                 throw new NoSuchNamespaceException("Namespace does not exist: %s", namespace);
             }
@@ -207,8 +205,8 @@ public class LakeFSCatalog extends BaseMetastoreCatalog implements SupportsNames
             LOG.debug("Not an iceberg table: {}", identifier);
             return false;
         }
-        try (LakeFSFileSystem fs = new LakeFSFileSystem()) {
-            fs.initialize(tablePath.toUri(), this.conf);
+        try {
+            FileSystem fs = tablePath.getFileSystem(conf);
             if (purge) {
                     // Since the data files and the metadata files may store in different locations,
                     // so it has to call dropTableData to force delete the data file.
@@ -242,8 +240,8 @@ public class LakeFSCatalog extends BaseMetastoreCatalog implements SupportsNames
             throw new AlreadyExistsException("Namespace already exists: %s", namespace);
         }
 
-        try (LakeFSFileSystem fs = new LakeFSFileSystem()) {
-            fs.initialize(nsPath.toUri(), this.conf);
+        try {
+            FileSystem fs = metadataPath.getFileSystem(conf);
             FSDataOutputStream stream = fs.create(metadataPath, false);
             ObjectMapper mapper = new ObjectMapper();
             stream.write(mapper.writeValueAsBytes(meta));
@@ -275,10 +273,10 @@ public class LakeFSCatalog extends BaseMetastoreCatalog implements SupportsNames
             throw new NoSuchNamespaceException("Namespace does not exist: %s", namespace);
         }
 
-        try (LakeFSFileSystem fs = new LakeFSFileSystem()) {
+        try {
+            FileSystem fs = nsPath.getFileSystem(conf);
             // using the iterator listing allows for paged downloads
             // from lakeFS and prefetching from object storage.
-            fs.initialize(nsPath.toUri(), this.conf);
             List<Namespace> namespaces = Lists.newArrayList();
             RemoteIterator<FileStatus> it = fs.listStatusIterator(nsPath);
             while (it.hasNext()) {
@@ -309,8 +307,8 @@ public class LakeFSCatalog extends BaseMetastoreCatalog implements SupportsNames
             return false;
         }
 
-        try (LakeFSFileSystem fs = new LakeFSFileSystem()) {
-            fs.initialize(nsPath.toUri(), this.conf);
+        try {
+            FileSystem fs = nsPath.getFileSystem(conf);
             RemoteIterator<FileStatus> it = fs.listStatusIterator(nsPath);
             while (it.hasNext()) {
                 LakeFSFileStatus status = (LakeFSFileStatus)it.next();
@@ -345,8 +343,8 @@ public class LakeFSCatalog extends BaseMetastoreCatalog implements SupportsNames
             throw new NoSuchNamespaceException("Namespace does not exist: %s", namespace);
         }
 
-        try (LakeFSFileSystem fs = new LakeFSFileSystem()) {
-            fs.initialize(nsPath.toUri(), this.conf);
+        try {
+            FileSystem fs = nsPath.getFileSystem(conf);
             Path mdPath = new Path(nsPath, NAMESPACE_FILENAME);
             if (fs.exists(mdPath)) {
                 ObjectMapper mapper = new ObjectMapper();
@@ -399,7 +397,7 @@ public class LakeFSCatalog extends BaseMetastoreCatalog implements SupportsNames
 
         private LakeFSCatalogTableBuilder(TableIdentifier identifier, Schema schema) {
             super(identifier, schema);
-            defaultLocation = Util.GetPathFromURL(String.format("%s%s", WAREHOUSE_LOCATION, defaultWarehouseLocation(identifier)));
+            defaultLocation = Util.getPathFromURL(String.format("%s%s", WAREHOUSE_LOCATION, defaultWarehouseLocation(identifier)));
             super.withLocation(defaultLocation);
         }
 

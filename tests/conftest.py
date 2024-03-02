@@ -69,7 +69,7 @@ def spark():
     spark_config.set("spark.hadoop.fs.lakefs.secret.key", "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY")
     spark_config.set("spark.hadoop.fs.lakefs.endpoint", "http://localhost:8000/api/v1")
     spark_config.set("spark.jars.packages",
-                     "io.lakefs:lakefs-iceberg-catalog:0.1.0-SNAPSHOT,"
+                     "io.lakefs:lakefs-iceberg-catalog:0.1.0-SNAPSHOT-1,"
                      "org.apache.iceberg:iceberg-spark-runtime-3.3_2.12:1.4.3,"
                      "org.apache.hadoop:hadoop-aws:3.3.4"
                      )
