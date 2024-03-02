@@ -59,7 +59,7 @@ def spark():
     spark_config = SparkConf()
     spark_config.set("spark.sql.catalog.lakefs", "org.apache.iceberg.spark.SparkCatalog")
     spark_config.set("spark.sql.catalog.lakefs.catalog-impl", "io.lakefs.iceberg.catalog.LakeFSCatalog")
-    spark_config.set("spark.sql.catalog.lakefs.warehouse", f"lakefs://")
+    spark_config.set("spark.sql.catalog.lakefs.catalog-impl", "io.lakefs.iceberg.catalog.LakeFSCatalog")
     spark_config.set("spark.sql.catalog.lakefs.cache-enabled", "false")
     spark_config.set("spark.sql.extensions", "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions")
     spark_config.set("spark.hadoop.fs.s3a.access.key", access_key)
