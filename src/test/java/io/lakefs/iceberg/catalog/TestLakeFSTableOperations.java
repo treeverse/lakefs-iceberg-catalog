@@ -33,6 +33,7 @@ public class TestLakeFSTableOperations {
         conf.set("fs.lakefs.access.key", "AKIAIOSFDNN7EXAMPLEQ");
         conf.set("fs.lakefs.secret.key", "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY");
         conf.set("fs.lakefs.endpoint", "http://localhost:8000/api/v1");
+        conf.set("fs.lakefs.impl", "io.lakefs.LakeFSFileSystem");
         conf.set("fs.s3a.access.key", awsAccessKey);
         conf.set("fs.s3a.secret.key", awsSecretKey);
 
