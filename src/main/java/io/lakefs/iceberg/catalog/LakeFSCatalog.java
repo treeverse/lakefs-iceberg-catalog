@@ -63,11 +63,10 @@ public class LakeFSCatalog extends BaseMetastoreCatalog implements SupportsNames
     @Override
     public void initialize(String name, Map<String, String> properties) {
         catalogProperties = ImmutableMap.copyOf(properties);
-        String inputWarehouseLocation = properties.get(CatalogProperties.WAREHOUSE_LOCATION);
         Preconditions.checkArgument(
-                inputWarehouseLocation != null && !inputWarehouseLocation.isEmpty(),
-                String.format("Missing catalog property %s. Cannot initialize LakeFSCatalog because " +
-                        "warehousePath must not be null or empty", CatalogProperties.WAREHOUSE_LOCATION));
+                properties.get(CatalogProperties.WAREHOUSE_LOCATION) == null,
+                String.format("Unsupported configuration: LakeFSCatalog does not support the property: %s", 
+                        CatalogProperties.WAREHOUSE_LOCATION));
 
         catalogName = name;
         warehouseLocation = WAREHOUSE_LOCATION;

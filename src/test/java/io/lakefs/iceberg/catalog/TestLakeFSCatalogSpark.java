@@ -44,7 +44,6 @@ public class TestLakeFSCatalogSpark {
         SparkConf conf = new SparkConf();
         conf.set("spark.sql.catalog.lakefs", "org.apache.iceberg.spark.SparkCatalog");
         conf.set("spark.sql.catalog.lakefs.catalog-impl", "io.lakefs.iceberg.catalog.LakeFSCatalog");
-        conf.set("spark.sql.catalog.lakefs.warehouse", "lakefs://example-repo");
         conf.set("spark.sql.extensions", "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions");
 
         conf.set("spark.hadoop.fs.s3a.access.key", awsAccessKey);
