@@ -47,7 +47,7 @@ public class TestLakeFSTableOperations {
         baseUrl = String.format("lakefs://%s/%s", lakeFSRepo, lakeFSRef);
         repoCreation.setStorageNamespace(String.format("%s/%s", storageNamespace, repoCreation.getName()));
         lfsClient.getRepositoriesApi().createRepository(repoCreation).execute();
-        lakeFSFileIO = new LakeFSFileIO(lakeFSRepo, lakeFSRef, conf);
+        lakeFSFileIO = new LakeFSFileIO("lakefs://", lakeFSRepo, lakeFSRef, conf);
     }
 
     @Test

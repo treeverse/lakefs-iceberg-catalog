@@ -52,8 +52,6 @@ public class LakeFSCatalog extends BaseMetastoreCatalog implements SupportsNames
             path -> path.getName().endsWith(TABLE_METADATA_FILE_EXTENSION);
     private static final String HADOOP_SUPPRESS_PERMISSION_ERROR = "suppress-permission-error";
 
-    public static final String WAREHOUSE_LOCATION = "lakefs://";
-
     private String catalogName;
     private Configuration conf;
     private String warehouseLocation;
@@ -63,15 +61,14 @@ public class LakeFSCatalog extends BaseMetastoreCatalog implements SupportsNames
     @Override
     public void initialize(String name, Map<String, String> properties) {
         catalogProperties = ImmutableMap.copyOf(properties);
+        String inputWarehouseLocation = properties.get(CatalogProperties.WAREHOUSE_LOCATION);
         Preconditions.checkArgument(
-                properties.get(CatalogProperties.WAREHOUSE_LOCATION) == null,
-                String.format("Unsupported configuration: LakeFSCatalog does not support the property: %s", 
-                        CatalogProperties.WAREHOUSE_LOCATION));
+                inputWarehouseLocation != null && !inputWarehouseLocation.isEmpty(),
+                "Cannot initialize LakeFSCatalog because warehousePath must not be null or empty");
 
         catalogName = name;
-        warehouseLocation = WAREHOUSE_LOCATION;
+        warehouseLocation = inputWarehouseLocation;
         suppressPermissionError = Boolean.parseBoolean(properties.get(HADOOP_SUPPRESS_PERMISSION_ERROR));
-        // TODO (niro): Future - create a caching mechanism for FileSystem Initialization per repo
     }
 
     @Override
@@ -128,7 +125,7 @@ public class LakeFSCatalog extends BaseMetastoreCatalog implements SupportsNames
         Preconditions.checkArgument(
                 namespace.levels().length > 1, "Missing database in table identifier: %s", namespace);
 
-        String location = String.format("%s%s", WAREHOUSE_LOCATION, defaultWarehouseLocation(namespace));
+        String location = String.format("%s%s", warehouseLocation, defaultWarehouseLocation(namespace));
         Set<TableIdentifier> tblIdents = Sets.newHashSet();
         try {
             Path nsPath = new Path(new URI(location));
@@ -170,9 +167,9 @@ public class LakeFSCatalog extends BaseMetastoreCatalog implements SupportsNames
         final String[] levels = identifier.namespace().levels();
         Preconditions.checkArgument(levels.length > 2, String.format("Missing database in table identifier: %s", identifier));
         Configuration conf = getConf();
-        LakeFSFileIO fileIO = new LakeFSFileIO(levels[0], levels[1], conf);
+        LakeFSFileIO fileIO = new LakeFSFileIO(warehouseLocation, levels[0], levels[1], conf);
         String location = String.format("%s%s", warehouseLocation, defaultWarehouseLocation(identifier));
-        return new LakeFSTableOperations(new Path(location), fileIO, conf);
+        return new LakeFSTableOperations(new Path(location), fileIO, warehouseLocation, conf);
     }
 
     @Override
@@ -191,7 +188,7 @@ public class LakeFSCatalog extends BaseMetastoreCatalog implements SupportsNames
             throw new NoSuchTableException("Invalid identifier: %s", identifier);
         }
 
-        String location = String.format("%s%s", WAREHOUSE_LOCATION, defaultWarehouseLocation(identifier));
+        String location = String.format("%s%s", warehouseLocation, defaultWarehouseLocation(identifier));
         Path tablePath;
         try {
             tablePath = new Path(new URI(location));
@@ -226,7 +223,7 @@ public class LakeFSCatalog extends BaseMetastoreCatalog implements SupportsNames
     public void createNamespace(Namespace namespace, Map<String, String> meta) {
         Preconditions.checkArgument(
                 !namespace.isEmpty(), "Cannot create namespace with invalid name: %s", namespace);
-        String location = String.format("%s%s", WAREHOUSE_LOCATION, defaultWarehouseLocation(namespace));
+        String location = String.format("%s%s", warehouseLocation, defaultWarehouseLocation(namespace));
         Path metadataPath = new Path(location + "/" + NAMESPACE_FILENAME);
         Path nsPath;
         try {
@@ -261,7 +258,7 @@ public class LakeFSCatalog extends BaseMetastoreCatalog implements SupportsNames
             throw new NoSuchNamespaceException("Namespace must contain at least repository and branch levels: %s", namespace);
         }
 
-        String location = String.format("%s%s", WAREHOUSE_LOCATION, defaultWarehouseLocation(namespace));
+        String location = String.format("%s%s", warehouseLocation, defaultWarehouseLocation(namespace));
         Path nsPath;
         try {
             nsPath = new Path(new URI(location));
@@ -298,7 +295,7 @@ public class LakeFSCatalog extends BaseMetastoreCatalog implements SupportsNames
 
     @Override
     public boolean dropNamespace(Namespace namespace) {
-        String location = String.format("%s%s", WAREHOUSE_LOCATION, defaultWarehouseLocation(namespace));
+        String location = String.format("%s%s", warehouseLocation, defaultWarehouseLocation(namespace));
         // This method of getting the path removes the last slash so that the namespace directory is removed
         Path nsPath = new Path(location);
 
@@ -336,7 +333,7 @@ public class LakeFSCatalog extends BaseMetastoreCatalog implements SupportsNames
     @Override
     public Map<String, String> loadNamespaceMetadata(Namespace namespace) {
         Map<String,String> result = new HashMap<>();
-        String location = String.format("%s%s", WAREHOUSE_LOCATION, defaultWarehouseLocation(namespace));
+        String location = String.format("%s%s", warehouseLocation, defaultWarehouseLocation(namespace));
         Path nsPath = new Path(location);
         if (!isNamespace(nsPath) || namespace.isEmpty()) {
             throw new NoSuchNamespaceException("Namespace does not exist: %s", namespace);
@@ -396,7 +393,7 @@ public class LakeFSCatalog extends BaseMetastoreCatalog implements SupportsNames
 
         private LakeFSCatalogTableBuilder(TableIdentifier identifier, Schema schema) {
             super(identifier, schema);
-            defaultLocation = Util.getPathFromURL(String.format("%s%s", WAREHOUSE_LOCATION, defaultWarehouseLocation(identifier)));
+            defaultLocation = Util.getPathFromURL(String.format("%s%s", warehouseLocation, defaultWarehouseLocation(identifier)));
             super.withLocation(defaultLocation);
         }
 

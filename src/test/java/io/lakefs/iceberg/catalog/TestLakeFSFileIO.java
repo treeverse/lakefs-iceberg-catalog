@@ -34,7 +34,7 @@ public class TestLakeFSFileIO extends FSTestBase {
                                 .preSignSupportUi(false)
                                 .importSupport(false)
                                 .importValidityRegex(".*"))));
-        lakeFSFileIO = new LakeFSFileIO(lakeFSRepo, lakeFSRef, conf);
+        lakeFSFileIO = new LakeFSFileIO("lakefs://", lakeFSRepo, lakeFSRef, conf);
     }
 
     @Test

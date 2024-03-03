@@ -1,6 +1,5 @@
 package io.lakefs.iceberg.catalog;
 
-import io.lakefs.LakeFSFileSystem;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
@@ -38,7 +37,8 @@ public class LakeFSTableOperations extends HadoopTableOperations {
     private static final Logger LOG = LoggerFactory.getLogger(LakeFSTableOperations.class);
     private static final Pattern VERSION_PATTERN = Pattern.compile("v([^.]*)\\..*");
     private final Path location;
-    private final LakeFSFileSystem fs;
+    private final String warehouse;
+    private final FileSystem fs;
     private final FileIO fileIO;
 
     // Ensure reading currentMetadata will provide the last value written
@@ -48,13 +48,13 @@ public class LakeFSTableOperations extends HadoopTableOperations {
     // volatile parameter to ensure that if it was set to true, it will be read appropriately  
     private volatile boolean shouldRefresh = true;
 
-    public LakeFSTableOperations(Path location, FileIO fileIO, Configuration conf) {
+    public LakeFSTableOperations(Path location, FileIO fileIO, String warehouse, Configuration conf) {
         super(location, fileIO, conf, LockManagers.defaultLockManager());
         this.fileIO = fileIO;
         this.location = location;
-        this.fs = new LakeFSFileSystem();
+        this.warehouse = warehouse;
         try {
-            fs.initialize(location.toUri(), conf);
+            this.fs = location.getFileSystem(conf);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -69,7 +69,7 @@ public class LakeFSTableOperations extends HadoopTableOperations {
     @Override
     public String metadataFileLocation(String fileName) {
         String path = super.metadataFileLocation(fileName);
-        if (path.startsWith(LakeFSCatalog.WAREHOUSE_LOCATION)) {
+        if (path.startsWith(warehouse)) {
             path = Util.getPathFromURL(path);
         }
         return path;
@@ -125,10 +125,10 @@ public class LakeFSTableOperations extends HadoopTableOperations {
 
         Preconditions.checkArgument(
                 base == null || base.location().equals(metadata.location()),
-                "Hadoop path-based tables cannot be relocated");
+                "lakeFS path-based tables cannot be relocated");
         Preconditions.checkArgument(
                 !metadata.properties().containsKey(TableProperties.WRITE_METADATA_LOCATION),
-                "Hadoop path-based tables cannot relocate metadata");
+                "lakeFS path-based tables cannot relocate metadata");
 
         String codecName =
                 metadata.property(

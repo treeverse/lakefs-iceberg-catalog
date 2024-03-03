@@ -15,17 +15,13 @@ import org.apache.iceberg.io.OutputFile;
  */
 public class LakeFSFileIO extends HadoopFileIO {
 
-    private transient Configuration conf; // transient - to avoid Spark serialization error
-    private String basePath;
-    
-    @SuppressWarnings("unused")
-    public LakeFSFileIO() {
-    }
+    private final transient Configuration conf; // transient - to avoid Spark serialization error
+    private final String basePath;
 
-    public LakeFSFileIO(String lakeFSRepo, String lakeFSRef, Configuration conf) {
+    public LakeFSFileIO(String warehouse, String lakeFSRepo, String lakeFSRef, Configuration conf) {
         super(conf);
         this.conf = conf;
-        this.basePath = String.format("%s%s/%s", LakeFSCatalog.WAREHOUSE_LOCATION, lakeFSRepo, lakeFSRef);
+        this.basePath = String.format("%s%s/%s", warehouse, lakeFSRepo, lakeFSRef);
         
     }
 
@@ -59,9 +55,6 @@ public class LakeFSFileIO extends HadoopFileIO {
     private static class LakeFSPath extends Path {
         public LakeFSPath(String pathString) throws IllegalArgumentException {
             super(pathString);
-            if (!pathString.startsWith("lakefs://")) {
-                throw new IllegalArgumentException("Expecting a valid lakefs URI");
-            }
         }
 
         /**
