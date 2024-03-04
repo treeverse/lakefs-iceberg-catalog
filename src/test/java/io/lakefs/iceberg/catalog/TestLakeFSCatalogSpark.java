@@ -49,12 +49,10 @@ public class TestLakeFSCatalogSpark {
 
         conf.set("spark.hadoop.fs.s3a.access.key", awsAccessKey);
         conf.set("spark.hadoop.fs.s3a.secret.key", awsSecretKey);
-        conf.set("spark.hadoop.fs.s3a.path.style.access", "true");
         conf.set("spark.hadoop.fs.lakefs.impl", "io.lakefs.LakeFSFileSystem");
         conf.set("spark.hadoop.fs.lakefs.access.key", "AKIAIOSFDNN7EXAMPLEQ");
         conf.set("spark.hadoop.fs.lakefs.secret.key", "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY");
         conf.set("spark.hadoop.fs.lakefs.endpoint", "http://localhost:8000/api/v1");
-        conf.set("spark.sql.catalog.lakefs.default-namespace", String.format("%s.%s", repo, mainBranch));
 
         SparkSession spark = SparkSession.builder().master("local").config(conf).getOrCreate();
 

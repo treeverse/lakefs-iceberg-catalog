@@ -6,7 +6,7 @@
 
     <groupId>io.lakefs</groupId>
     <artifactId>lakefs-iceberg-catalog</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.1.0</version>
 
     <name>lakefs-iceberg-catalog</name>
     <url>https://lakefs.io</url>

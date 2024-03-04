@@ -14,13 +14,11 @@ import org.apache.iceberg.io.OutputFile;
  * It also uses the LakeFSPath object to provide the relative path functionality for the Iceberg Catalog
  */
 public class LakeFSFileIO extends HadoopFileIO {
-
-    private final transient Configuration conf; // transient - to avoid Spark serialization error
+    
     private final String basePath;
 
     public LakeFSFileIO(String warehouse, String lakeFSRepo, String lakeFSRef, Configuration conf) {
         super(conf);
-        this.conf = conf;
         this.basePath = String.format("%s%s/%s", warehouse, lakeFSRepo, lakeFSRef);
         
     }
@@ -37,19 +35,19 @@ public class LakeFSFileIO extends HadoopFileIO {
     @Override
     public InputFile newInputFile(String path) {
         path = verifyPath(path);
-        return HadoopInputFile.fromPath(new LakeFSPath(path), conf);
+        return HadoopInputFile.fromPath(new LakeFSPath(path), getConf());
     }
 
     @Override
     public InputFile newInputFile(String path, long length) {
         path = verifyPath(path);
-        return HadoopInputFile.fromPath(new LakeFSPath(path), length, conf);
+        return HadoopInputFile.fromPath(new LakeFSPath(path), length, getConf());
     }
 
     @Override
     public OutputFile newOutputFile(String path) {
         path = verifyPath(path);
-        return HadoopOutputFile.fromPath(new LakeFSPath(path), conf);
+        return HadoopOutputFile.fromPath(new LakeFSPath(path), getConf());
     }
 
     private static class LakeFSPath extends Path {

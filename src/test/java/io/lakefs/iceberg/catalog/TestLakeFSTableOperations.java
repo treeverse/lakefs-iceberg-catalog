@@ -28,6 +28,9 @@ public class TestLakeFSTableOperations {
         String awsAccessKey = System.getenv("AWS_ACCESS_KEY_ID");
         String awsSecretKey = System.getenv("AWS_SECRET_ACCESS_KEY");
         String storageNamespace = System.getenv("STORAGE_NAMESPACE");
+        Assert.assertNotNull(awsAccessKey);
+        Assert.assertNotNull(awsSecretKey);
+        Assert.assertNotNull(storageNamespace);
 
         conf = new Configuration();
         conf.set("fs.lakefs.access.key", "AKIAIOSFDNN7EXAMPLEQ");
