@@ -22,24 +22,25 @@ Load this jar into your environment.
 
 ## Configuration
 
-lakeFS Catalog is using lakeFS HadoopFileSystem under the hood to interact with lakeFS.
+lakeFS Catalog is using [lakeFS Hadoop FileSystem](https://docs.lakefs.io/integrations/spark.html#lakefs-hadoop-filesystem) under the hood to interact with lakeFS.
 In addition, for better performance we configure the S3A FS to interact directly with the underlying storage:
 
 ```scala
 conf.set("spark.hadoop.fs.lakefs.impl", "io.lakefs.LakeFSFileSystem")
 conf.set("spark.hadoop.fs.lakefs.access.key", "AKIAIOSFDNN7EXAMPLEQ")
 conf.set("spark.hadoop.fs.lakefs.secret.key", "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY")
-conf.set("spark.hadoop.fs.lakefs.endpoint", "http://localhost:8000/api/v1")
+conf.set("spark.hadoop.fs.lakefs.endpoint", "<your-lakefs-endpoint>/api/v1")
 conf.set("spark.hadoop.fs.s3a.access.key", "<your-aws-access-key>")
 conf.set("spark.hadoop.fs.s3a.secret.key", "<your-aws-secret-key>")
 ```
 
-In the catalog configuration pass the lakefs FS scheme configured previously as the warehouse location
+To configure a custom lakeFS catalog using Spark:
+In the catalog configuration pass the lakefs FS schema configured previously as the warehouse location
 
 ```scala
 conf.set("spark.sql.catalog.lakefs", "org.apache.iceberg.spark.SparkCatalog")
 conf.set("spark.sql.catalog.lakefs.catalog-impl", "io.lakefs.iceberg.LakeFSCatalog")
-conf.set("spark.sql.catalog.lakefs.warehouse", "lakefs://")
+conf.set("spark.sql.catalog.lakefs.warehouse", "lakefs://") // Should be equal to the name of the lakefs FS configured
 ```
 
 ## Usage
@@ -48,7 +49,7 @@ For our examples, assume lakeFS repository called `myrepo`.
 
 ### Create a table
 
-Let's create a table called `table1` under `main` branch and namespace `name.space.`
+Let's create a table called `table1` under `main` branch and namespace `name.space`
 To create the table, use the following syntax:
 
 ```sql
@@ -111,3 +112,10 @@ Results in:
 | 2  | data2|
 +----+------+
 ```
+
+### Merge changes
+
+After changing the data on `dev` branch, it is possible to merge the data back to `main` using lakeFS UI, lakectl, or 
+any of our various clients.
+Note that currently for Iceberg tables only fast-forward merge is supported. To ensure the validity of the table history 
+the table in the `main` branch must not be altered before merging from `dev`.
