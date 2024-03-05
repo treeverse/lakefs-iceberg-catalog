@@ -1,0 +1,4 @@
+lakefs_sdk~=1.0
+pyspark==3.3.2
+pytest==7.4.0
+lakefs>=0.4.0
