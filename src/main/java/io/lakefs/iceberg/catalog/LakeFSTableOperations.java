@@ -239,12 +239,7 @@ public class LakeFSTableOperations extends HadoopTableOperations {
             return Integer.parseInt(in.readLine().replace("\n", ""));
         } catch (Exception e) {
             try {
-                if (fs.exists(metadataRoot())) {
-                    LOG.warn("Error reading version hint file {}", versionHintFile, e);
-                } else {
-                    LOG.debug("Metadata for table not found in directory {}", metadataRoot(), e);
-                    return 0;
-                }
+                LOG.warn("Could not read version hint file {}, listing metadata prefix", versionHintFile, e);
 
                 // List the metadata directory to find the version files, and try to recover the max
                 // available version
@@ -259,7 +254,8 @@ public class LakeFSTableOperations extends HadoopTableOperations {
                         maxVersion = currentVersion;
                     }
                 }
-
+                
+                LOG.info("metadata version found {}", maxVersion);
                 return maxVersion;
             } catch (IOException io) {
                 LOG.warn("Error trying to recover version-hint.txt data for {}", versionHintFile, e);
