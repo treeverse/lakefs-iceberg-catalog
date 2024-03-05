@@ -1,1 +1,1 @@
-# lakefs-iceberg-rest
+# lakefs-iceberg-catalog
